@@ -1,18 +1,28 @@
+import csv
 import os
-import pandas as pd
 
 # Dash
 import dash
 from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.express as px
+import plotly.graph_objects as go
 
 PATH_TO_SPEEDTEST_LOG = os.environ.get('PATH_TO_SPEEDTEST_LOG') or '/home/osmc/speedlog.csv'
 
-def df():
-    header = ['Server ID','Sponsor','Server Name','Timestamp','Distance','Ping','Download','Upload','Share','IP Address']
-    return pd.read_csv(PATH_TO_SPEEDTEST_LOG, names=header)
+def data():
+    timestamp = []
+    upload = []
+    download = []
+
+    with open(PATH_TO_SPEEDTEST_LOG, 'r') as logfile:
+        csv_reader = csv.DictReader(logfile)
+        for row in csv_reader:
+            timestamp.append(row['Timestamp'])
+            upload.append(row['Upload'])
+            download.append(row['Download'])
+
+    return timestamp, upload, download
 
 #########################
 # Dashboard Layout / View
@@ -59,21 +69,10 @@ app.layout = html.Div([
         dcc.Graph(
             id = "plot_download",
             style = {'margin-top': '20'},
-            figure = px.scatter(df(), x='Timestamp', y='Download', color='Server Name'),
+            figure = go.Figure(go.Scatter(x=[0], y=[0])),
             animate = True
         )
     ], className = "row justify-content-center"),
-
-    # Plot Upload
-    html.Div([
-        dcc.Graph(
-            id = "plot_upload",
-            style = {'margin-top': '20'},
-            figure = px.scatter(df(), x='Timestamp', y='Upload', color='Server Name'),
-            animate = True
-        )
-    ], className = "row justify-content-center"),
-
 
     dcc.Interval(
         id='interval-component',
@@ -87,17 +86,6 @@ app.layout = html.Div([
 
 # Update the graph
 @app.callback(
-    Output('plot_upload', 'figure'),
-    [
-        Input('button-update', 'n_clicks'),
-        Input('interval-component', 'n_intervals')
-    ]
-)
-def display_plot(n_clicks, n_intervals):
-    return px.scatter(df(), x='Timestamp', y='Upload', color='Server Name')
-
-# Update the graph
-@app.callback(
     Output('plot_download', 'figure'),
     [
         Input('button-update', 'n_clicks'),
@@ -105,7 +93,13 @@ def display_plot(n_clicks, n_intervals):
     ]
 )
 def display_plot(n_clicks, n_intervals):
-    return px.scatter(df(), x='Timestamp', y='Download', color='Server Name')
+    timestamp, upload, download = data()
+    plotting_data = [
+    go.Scatter(x=timestamp, y=upload, name='Upload', mode='markers'),
+    go.Scatter(x=timestamp, y=download, name='Download', mode='markers')
+    ]
+
+    return go.Figure(plotting_data)
 
 # start Flask server
 if __name__ == '__main__':

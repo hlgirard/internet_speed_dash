@@ -6,9 +6,5 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-pandas = "*"
 dash = "*"
 plotly = "*"
-
-[requires]
-python_version = "3.7"
