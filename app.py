@@ -8,7 +8,7 @@ import dash_html_components as html
 import plotly.express as px
 
 def df():
-    path_to_log = '/Users/hlgirard/Downloads/speedlog.csv'
+    path_to_log = '/home/osmc/speedlog.csv'
     header = ['Server ID','Sponsor','Server Name','Timestamp','Distance','Ping','Download','Upload','Share','IP Address']
     return pd.read_csv(path_to_log, names=header)
 
